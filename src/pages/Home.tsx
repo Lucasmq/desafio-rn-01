@@ -1,14 +1,30 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Alert } from 'react-native';
 
 import { Header } from '../components/Header';
-import { Task, TasksList } from '../components/TasksList';
+import { Task, TasksList, TaskUpdate } from '../components/TasksList';
 import { TodoInput } from '../components/TodoInput';
 
 export function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   function handleAddTask(newTaskTitle: string) {
+    const foundTask = tasks.find(task => task.title === newTaskTitle);
+
+    if(foundTask) {
+      Alert.alert(
+        "Task já cadastrada",
+        "Você não pode cadastrar uma task com o mesmo nome",
+        [
+          {
+            text: "Ok",
+          }
+        ]
+      );
+
+      return;
+    }
+
     const newTask = {
       id : Number(new Date().getTime()),
       title : newTaskTitle,
@@ -32,7 +48,31 @@ export function Home() {
 
   function handleRemoveTask(id: number) {
     //TODO - remove task from state
-    setTasks(oldTasks => [...oldTasks.filter(task => task.id !== id)])
+    Alert.alert(
+      "Remover Tarefa",
+      "Tem certeza que deseja remover essa tarefa?",
+      [
+        {
+          text: "Sim",
+          onPress: () =>  setTasks(oldTasks => [...oldTasks.filter(task => task.id !== id)])
+        },
+        {
+          text: "Não",
+          style: "cancel"
+        }
+      ]
+    );
+  }
+
+  function handleEditTask({taskId, newTitle} : TaskUpdate) {
+    const tasksUpdated = tasks.map(task => ({...task})); //copia o array, nao usa a referencia
+    const foundTask = tasksUpdated.find(task => task.id === taskId);
+
+    if(!foundTask)
+      return;
+
+    foundTask.title = newTitle;
+    setTasks(tasksUpdated);
   }
 
   return (
@@ -45,6 +85,7 @@ export function Home() {
         tasks={tasks} 
         toggleTaskDone={handleToggleTaskDone}
         removeTask={handleRemoveTask} 
+        editTask={handleEditTask}
       />
     </View>
   )
